@@ -1,0 +1,59 @@
+# Copyright 2018 Albert Mikaelyan <tahvok dot gmail dot com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+---
+- apt:
+    name: 'boinc-client'
+    state: installed
+  notify:
+    - restart boinc-client
+
+- lineinfile:
+    line: "{{ items }}"
+    state: present
+    dest: "/var/lib/boinc-client/remote_hosts.cfg"
+  with_items: "{{ boinc_remote_host_ips }}"
+  notify:
+    - restart boinc-client
+
+- lineinfile:
+    line: "{{ boinc_password }}"
+    regexp: ".*"
+    state: present
+    dest: "/etc/boinc-client/gui_rpc_auth.cfg"
+  notify:
+    - restart boinc-client
+
+- lineinfile:
+    line: 'BOINC_OPTS="--gui_rpc_port {{ boinc_rpc_port }}"'
+    regexp: '^BOINC_OPTS'
+    dest: "/etc/default/boinc-client"
+  notify:
+    - restart boinc-client
+
+- file:
+    dest: "/etc/systemd/system.service.d/boinc-client"
+    recurse: yes
+    state: directory
+  notify:
+    - restart boinc-client
+
+- lineinfile:
+    line: "{{ item }}"
+    create: yes
+    insertafter: EOF
+    dest: '/etc/systemd/system/boinc-client.service.d/override.conf'
+  with_items:
+    - "[Service]"
+    - "ExecStart="
+    - "ExecStart=/bin/sh -c '/usr/bin/boinc --dir /var/lib/boinc-client --gui_rpc_port {{ boinc_rpc_port }} >/var/log/boinc.log 2>/var/log/boincerr.log'"
+  notify:
+    - restart boinc-client
+
+- debug:
+    msg: "Boinc installed successfully! Connect with ip: {{ hostvars[instance_name]['ansible_default_ipv4']['address'] }} and port {{ boinc_rpc_port }}"
