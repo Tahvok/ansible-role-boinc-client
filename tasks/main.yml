@@ -14,7 +14,7 @@
     - restart boinc-client
 
 - lineinfile:
-    line: "{{ items }}"
+    line: "{{ item }}"
     state: present
     dest: "/var/lib/boinc-client/remote_hosts.cfg"
   with_items: "{{ boinc_remote_host_ips }}"
@@ -56,4 +56,4 @@
     - restart boinc-client
 
 - debug:
-    msg: "Boinc installed successfully! Connect with ip: {{ hostvars[instance_name]['ansible_default_ipv4']['address'] }} and port {{ boinc_rpc_port }}"
+    msg: "Boinc installed successfully! Connect with ip: {{ ansible_default_ipv4.address }} and port {{ boinc_rpc_port }}"
