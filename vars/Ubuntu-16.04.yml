@@ -1,0 +1,2 @@
+boinc_remote_hosts_conf_path: /var/lib/boinc-client/remote_hosts.cfg
+boinc_rpc_auth_conf_path: /etc/boinc-client/gui_rpc_auth.cfg

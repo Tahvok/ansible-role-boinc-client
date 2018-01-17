@@ -11,6 +11,8 @@ services:
 env:
   - distribution: ubuntu
     version: xenial
+  - distribution: fedora
+    version: 27
 
 before_install:
   - 'sudo docker pull ${distribution}:${version}'
