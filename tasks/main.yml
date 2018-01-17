@@ -7,34 +7,60 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 ---
-- apt:
+- package:
     name: 'boinc-client'
-    state: installed
+    state: present
   notify:
     - restart boinc-client
 
 - lineinfile:
     line: "{{ item }}"
     state: present
+    create: yes
     dest: "/var/lib/boinc-client/remote_hosts.cfg"
   with_items: "{{ boinc_remote_host_ips }}"
   notify:
     - restart boinc-client
+  when: ansible_distribution != 'Fedora'
+
+- lineinfile:
+    line: "{{ item }}"
+    state: present
+    create: yes
+    dest: "/var/lib/boinc/remote_hosts.cfg"
+  with_items: "{{ boinc_remote_host_ips }}"
+  notify:
+    - restart boinc-client
+  when: ansible_distribution == 'Fedora'
 
 - lineinfile:
     line: "{{ boinc_password }}"
     regexp: ".*"
     state: present
+    create: yes
     dest: "/etc/boinc-client/gui_rpc_auth.cfg"
   notify:
     - restart boinc-client
+  when: ansible_distribution != 'Fedora'
+
+- lineinfile:
+    line: "{{ boinc_password }}"
+    regexp: ".*"
+    state: present
+    create: yes
+    dest: "/var/lib/boinc/gui_rpc_auth.cfg"
+  notify:
+    - restart boinc-client
+  when: ansible_distribution == 'Fedora'
 
 - lineinfile:
     line: 'BOINC_OPTS="--gui_rpc_port {{ boinc_rpc_port }}"'
+    create: yes
     regexp: '^BOINC_OPTS'
     dest: "/etc/default/boinc-client"
   notify:
     - restart boinc-client
+  when: ansible_distribution != 'Fedora'
 
 - file:
     dest: "/etc/systemd/system.service.d/boinc-client"
@@ -42,6 +68,7 @@
     state: directory
   notify:
     - restart boinc-client
+  when: ansible_distribution != 'Fedora'
 
 - lineinfile:
     line: "{{ item }}"
@@ -54,6 +81,14 @@
     - "ExecStart=/bin/sh -c '/usr/bin/boinc --dir /var/lib/boinc-client --gui_rpc_port {{ boinc_rpc_port }} >/var/log/boinc.log 2>/var/log/boincerr.log'"
   notify:
     - restart boinc-client
+  when: ansible_distribution != 'Fedora'
+
+- firewalld:
+    port: "{{ boinc_rpc_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  when: ansible_distribution == 'Fedora'
 
 - debug:
     msg: "Boinc installed successfully! Connect with ip: {{ ansible_default_ipv4.address }} and port {{ boinc_rpc_port }}"

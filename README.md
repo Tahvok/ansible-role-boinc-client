@@ -9,6 +9,7 @@ Requirements
 ------------
 
 Ubuntu 16
+Fedora 27
 
 Role Variables
 --------------
