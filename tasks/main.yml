@@ -7,51 +7,35 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 ---
-- package:
+- name: include distro variables
+  include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+
+- name: install boinc client
+  package:
     name: 'boinc-client'
     state: present
   notify:
     - restart boinc-client
 
-- lineinfile:
+- name: remote hosts configuration
+  lineinfile:
     line: "{{ item }}"
     state: present
     create: yes
-    dest: "/var/lib/boinc-client/remote_hosts.cfg"
+    dest: "{{ boinc_remote_hosts_conf_path }}"
   with_items: "{{ boinc_remote_host_ips }}"
   notify:
     - restart boinc-client
-  when: ansible_distribution != 'Fedora'
 
-- lineinfile:
-    line: "{{ item }}"
-    state: present
-    create: yes
-    dest: "/var/lib/boinc/remote_hosts.cfg"
-  with_items: "{{ boinc_remote_host_ips }}"
-  notify:
-    - restart boinc-client
-  when: ansible_distribution == 'Fedora'
-
-- lineinfile:
+- name: rpc auth password configuration
+  lineinfile:
     line: "{{ boinc_password }}"
     regexp: ".*"
     state: present
     create: yes
-    dest: "/etc/boinc-client/gui_rpc_auth.cfg"
+    dest: "{{ boinc_rpc_auth_conf_path }}"
   notify:
     - restart boinc-client
-  when: ansible_distribution != 'Fedora'
-
-- lineinfile:
-    line: "{{ boinc_password }}"
-    regexp: ".*"
-    state: present
-    create: yes
-    dest: "/var/lib/boinc/gui_rpc_auth.cfg"
-  notify:
-    - restart boinc-client
-  when: ansible_distribution == 'Fedora'
 
 - lineinfile:
     line: 'BOINC_OPTS="--gui_rpc_port {{ boinc_rpc_port }}"'
@@ -88,7 +72,7 @@
     permanent: true
     immediate: true
     state: enabled
-  when: ansible_distribution == 'Fedora'
+  when: ansible_distribution == 'Fedora' and not boinc_during_test
 
 - debug:
-    msg: "Boinc installed successfully! Connect with ip: {{ ansible_default_ipv4.address }} and port {{ boinc_rpc_port }}"
+    msg: "Boinc installed successfully! Connect with ip: {{ boinc_remote_host_ips.0 }} and port {{ boinc_rpc_port }}"

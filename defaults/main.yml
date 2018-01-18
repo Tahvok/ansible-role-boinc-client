@@ -16,3 +16,6 @@ boinc_remote_host_ips:
 
 # RPC port
 boinc_rpc_port: "31416"
+
+# We cannot test firewall tasks currently so we use it in testing
+boinc_during_test: False

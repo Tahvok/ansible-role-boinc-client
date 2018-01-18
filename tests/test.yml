@@ -9,5 +9,9 @@
 ---
 - hosts: all
   remote_user: root
+  vars:
+    boinc_remote_host_ips:
+      - '1.1.1.1'
+    boinc_during_test: True
   roles:
     - boinc-client
