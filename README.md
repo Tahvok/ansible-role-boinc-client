@@ -5,11 +5,11 @@ Ansible role to install boinc-client on remote machine.
 I will also configure your machine as allowed to connect to via rpc and set a rpc password.
 Check out the default variable to understand how to override this.
 
-Requirements
-------------
+Supported operating systems
+---------------------------
 
-Ubuntu 16
-Fedora 27
+- Ubuntu 16
+- Fedora 27
 
 Role Variables
 --------------
